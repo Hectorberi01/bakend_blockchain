@@ -1,0 +1,2868 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API Auth / UserManager",
+    "version": "1.0.0",
+    "description": "Documentation de l'API Auth / UserManager (SIWE, OTP, JWT, KYC)"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Serveur local"
+    }
+  ],
+  "paths": {
+    "/api/treasury/balance": {
+      "get": {
+        "summary": "Consulter le solde de la trésorerie",
+        "tags": [
+          "Treasury"
+        ],
+        "responses": {
+          "200": {
+            "description": "Solde de la trésorerie récupéré avec succès"
+          },
+          "400": {
+            "description": "Erreur lors de la récupération du solde"
+          }
+        }
+      }
+    },
+    "/api/treasury/withdraw": {
+      "post": {
+        "summary": "Retirer des fonds depuis la trésorerie (admin seulement)",
+        "tags": [
+          "Treasury"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "to",
+                  "amount"
+                ],
+                "properties": {
+                  "to": {
+                    "type": "string",
+                    "example": "0xAbC123456789..."
+                  },
+                  "amount": {
+                    "type": "string",
+                    "example": "1000000000000000000"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Retrait effectué avec succès"
+          },
+          "400": {
+            "description": "Erreur ou autorisation refusée"
+          }
+        }
+      }
+    },
+    "/api/users/id/{userId}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Récupérer les informations d'un utilisateur par son userId",
+        "description": "Récupère les informations complètes d'un utilisateur à partir de son identifiant unique (bytes32)",
+        "operationId": "getUserInfoById",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "L'identifiant unique de l'utilisateur (bytes32)",
+            "schema": {
+              "type": "string",
+              "example": "1"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Informations utilisateur récupérées avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "userId": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "country": {
+                          "type": "string"
+                        },
+                        "phoneHash": {
+                          "type": "string"
+                        },
+                        "walletAddress": {
+                          "type": "string"
+                        },
+                        "isActive": {
+                          "type": "boolean"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "lastLoginDate": {
+                          "type": "string"
+                        },
+                        "failedLoginAttempts": {
+                          "type": "string"
+                        },
+                        "metadata": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Format de userId invalide"
+          },
+          "404": {
+            "description": "Utilisateur non trouvé"
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/api/users/wallet/{address}/login-status": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Vérifier le statut de connexion d'un utilisateur",
+        "description": "Vérifie si un utilisateur est connecté et récupère les informations de sa session active",
+        "operationId": "checkLoginStatus",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "L'adresse Ethereum du wallet",
+            "schema": {
+              "type": "string",
+              "example": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statut récupéré avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "isLoggedIn": {
+                              "type": "boolean",
+                              "example": true
+                            },
+                            "session": {
+                              "type": "object",
+                              "properties": {
+                                "email": {
+                                  "type": "string"
+                                },
+                                "loginTime": {
+                                  "type": "string"
+                                },
+                                "lastActivity": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "isLoggedIn": {
+                              "type": "boolean",
+                              "example": false
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Format d'adresse invalide"
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Récupérer tous les utilisateurs avec pagination",
+        "description": "Récupère une liste paginée de tous les identifiants utilisateurs (userIds)",
+        "operationId": "getAllUsers",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Position de départ pour la pagination",
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre maximum d'éléments à retourner",
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "maximum": 1000,
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des utilisateurs récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "string",
+                          "example": "150"
+                        },
+                        "offset": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "limit": {
+                          "type": "integer",
+                          "example": 10
+                        },
+                        "userIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "example": [
+                            "0x1234...abcd",
+                            "0x5678...efgh"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Mettre à jour les informations utilisateur",
+        "description": "Permet à un utilisateur connecté de mettre à jour son email, pays et métadonnées.\nL'utilisateur doit être connecté pour effectuer cette opération.\n",
+        "operationId": "updateUserInfo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "privateKey",
+                  "email",
+                  "country"
+                ],
+                "properties": {
+                  "privateKey": {
+                    "type": "string",
+                    "description": "Clé privée du wallet",
+                    "example": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Nouvel email",
+                    "example": "john.updated@example.com"
+                  },
+                  "country": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 2,
+                    "description": "Nouveau code pays (2 lettres)",
+                    "example": "US"
+                  },
+                  "metadata": {
+                    "type": "string",
+                    "description": "Nouvelles métadonnées JSON",
+                    "example": "{\"firstName\":\"John\",\"lastName\":\"Doe Updated\"}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Informations mises à jour avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactionHash": {
+                          "type": "string"
+                        },
+                        "blockNumber": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides ou email déjà utilisé"
+          },
+          "401": {
+            "description": "Non connecté"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/users/create": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Créer un utilisateur sans wallet",
+        "description": "Crée un nouvel utilisateur sur la blockchain sans wallet associé.\nL'utilisateur pourra lier son wallet ultérieurement.\n**Nécessite les droits Account Creator.**\n",
+        "operationId": "createUserFor",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "country",
+                  "phoneHash",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email de l'utilisateur (doit être unique)",
+                    "example": "john.doe@example.com"
+                  },
+                  "country": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 2,
+                    "description": "Code pays ISO (2 lettres)",
+                    "example": "FR"
+                  },
+                  "phoneHash": {
+                    "type": "string",
+                    "description": "Hash du numéro de téléphone (keccak256)",
+                    "example": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "description": "Mot de passe de l'utilisateur (min 8 caractères)",
+                    "example": "SecurePass123!"
+                  },
+                  "metadata": {
+                    "type": "string",
+                    "description": "Métadonnées JSON optionnelles",
+                    "example": "{\"firstName\":\"John\",\"lastName\":\"Doe\"}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Utilisateur créé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactionHash": {
+                          "type": "string"
+                        },
+                        "blockNumber": {
+                          "type": "number"
+                        },
+                        "userId": {
+                          "type": "string",
+                          "description": "ID unique de l'utilisateur créé"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides ou email/téléphone déjà utilisé"
+          },
+          "401": {
+            "description": "Non autorisé (pas de droits Account Creator)"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/users/login": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Connexion d'un utilisateur",
+        "description": "Authentifie un utilisateur avec son email et mot de passe.\nCrée une session active sur la blockchain.\nArchitecture custodial : le wallet est géré par le backend.\n",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "hector.adjakpa@gmail.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "Hector01"
+                  }
+                }
+              },
+              "examples": {
+                "standard": {
+                  "summary": "Login standard",
+                  "value": {
+                    "email": "hector.adjakpa@gmail.com",
+                    "password": "Hector01"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Connexion réussie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactionHash": {
+                          "type": "string"
+                        },
+                        "blockNumber": {
+                          "type": "number"
+                        },
+                        "walletAddress": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données manquantes"
+          },
+          "401": {
+            "description": "Identifiants incorrects"
+          },
+          "423": {
+            "description": "Compte verrouillé (trop de tentatives échouées)"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/users/logout": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Déconnexion d'un utilisateur",
+        "description": "Ferme la session active de l'utilisateur sur la blockchain",
+        "operationId": "logout",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Déconnexion réussie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactionHash": {
+                          "type": "string"
+                        },
+                        "blockNumber": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Clé privée manquante"
+          },
+          "404": {
+            "description": "Aucune session active"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/users/change-password": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Changer le mot de passe",
+        "description": "Permet à un utilisateur authentifié de changer son mot de passe.\nNécessite un token JWT valide dans l'en-tête Authorization.\nLe mot de passe est mis à jour en base de données et sur la blockchain si le wallet est lié.\n",
+        "operationId": "changePassword",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "oldPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "oldPassword": {
+                    "type": "string",
+                    "description": "Ancien mot de passe",
+                    "example": "SecurePass123!"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 8,
+                    "description": "Nouveau mot de passe (min 8 caractères)",
+                    "example": "NewSecurePass456!"
+                  }
+                }
+              },
+              "examples": {
+                "standard": {
+                  "summary": "Changement de mot de passe standard",
+                  "value": {
+                    "oldPassword": "SecurePass123!",
+                    "newPassword": "NewSecurePass456!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Mot de passe changé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Password changed successfully"
+                        },
+                        "updatedInDatabase": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "updatedOnBlockchain": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "transactionHash": {
+                          "type": "string",
+                          "example": "0xabc123..."
+                        },
+                        "blockNumber": {
+                          "type": "number",
+                          "example": 12345678
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "withBlockchain": {
+                    "summary": "Mise à jour avec blockchain",
+                    "value": {
+                      "success": true,
+                      "data": {
+                        "message": "Password changed successfully",
+                        "updatedInDatabase": true,
+                        "updatedOnBlockchain": true,
+                        "transactionHash": "0xabc123...",
+                        "blockNumber": 12345678
+                      }
+                    }
+                  },
+                  "withoutBlockchain": {
+                    "summary": "Mise à jour sans blockchain (wallet non lié)",
+                    "value": {
+                      "success": true,
+                      "data": {
+                        "message": "Password changed successfully",
+                        "updatedInDatabase": true,
+                        "updatedOnBlockchain": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "examples": {
+                  "missingFields": {
+                    "summary": "Champs manquants",
+                    "value": {
+                      "error": "Missing required fields: oldPassword, newPassword"
+                    }
+                  },
+                  "weakPassword": {
+                    "summary": "Mot de passe trop court",
+                    "value": {
+                      "error": "Le mot de passe doit contenir au moins 8 caractères"
+                    }
+                  },
+                  "samePassword": {
+                    "summary": "Même mot de passe",
+                    "value": {
+                      "error": "New password must be different from old password"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié ou ancien mot de passe incorrect",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "examples": {
+                  "noToken": {
+                    "summary": "Token manquant",
+                    "value": {
+                      "error": "Authentication token required"
+                    }
+                  },
+                  "invalidToken": {
+                    "summary": "Token invalide",
+                    "value": {
+                      "error": "Invalid or expired token"
+                    }
+                  },
+                  "wrongPassword": {
+                    "summary": "Ancien mot de passe incorrect",
+                    "value": {
+                      "success": false,
+                      "error": "Invalid old password"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Utilisateur non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "User not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/id/{userId}/deactivate": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Désactiver un utilisateur",
+        "description": "Désactive le compte d'un utilisateur. L'utilisateur ne pourra plus se connecter\nni effectuer d'opérations jusqu'à réactivation.\n**Nécessite les droits Admin.**\n",
+        "operationId": "deactivateUser",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "L'identifiant unique de l'utilisateur (bytes32)",
+            "schema": {
+              "type": "string",
+              "example": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Utilisateur désactivé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactionHash": {
+                          "type": "string"
+                        },
+                        "blockNumber": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "userId invalide"
+          },
+          "401": {
+            "description": "Non autorisé"
+          },
+          "404": {
+            "description": "Utilisateur non trouvé"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/users/id/{userId}/reactivate": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Réactiver un utilisateur",
+        "description": "Réactive le compte d'un utilisateur précédemment désactivé.\n**Nécessite les droits Admin.**\n",
+        "operationId": "reactivateUser",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "L'identifiant unique de l'utilisateur (bytes32)",
+            "schema": {
+              "type": "string",
+              "example": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Utilisateur réactivé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactionHash": {
+                          "type": "string"
+                        },
+                        "blockNumber": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "userId invalide"
+          },
+          "401": {
+            "description": "Non autorisé"
+          },
+          "404": {
+            "description": "Utilisateur non trouvé"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/users/id/{userId}/unlock": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Débloquer un compte utilisateur",
+        "description": "Réinitialise les tentatives de connexion échouées et débloque le compte.\nUn compte est verrouillé après 5 tentatives de connexion échouées.\n**Nécessite les droits Admin.**\n",
+        "operationId": "unlockAccount",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "L'identifiant unique de l'utilisateur (bytes32)",
+            "schema": {
+              "type": "string",
+              "example": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Compte débloqué avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactionHash": {
+                          "type": "string"
+                        },
+                        "blockNumber": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "userId invalide"
+          },
+          "401": {
+            "description": "Non autorisé"
+          },
+          "404": {
+            "description": "Utilisateur non trouvé"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/users/account-creator": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Ajouter/retirer un account creator",
+        "description": "Autorise ou révoque les droits de création de compte pour une adresse.\nLes account creators peuvent créer des comptes pour d'autres utilisateurs.\n**Nécessite les droits Owner.**\n",
+        "operationId": "setAccountCreator",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "address",
+                  "enabled"
+                ],
+                "properties": {
+                  "address": {
+                    "type": "string",
+                    "description": "Adresse Ethereum à autoriser/révoquer",
+                    "example": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65"
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "true pour autoriser, false pour révoquer",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Droits mis à jour avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactionHash": {
+                          "type": "string"
+                        },
+                        "blockNumber": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Adresse invalide ou enabled non booléen"
+          },
+          "401": {
+            "description": "Non autorisé"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/users/pause": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Mettre en pause le contrat",
+        "description": "Suspend toutes les opérations sur le contrat en cas d'urgence.\n⚠️ **ATTENTION:** Cette action bloque toutes les opérations utilisateurs !\n**Nécessite les droits Owner.**\n",
+        "operationId": "pauseContract",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contrat mis en pause avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactionHash": {
+                          "type": "string",
+                          "example": "0xabc123..."
+                        },
+                        "blockNumber": {
+                          "type": "number",
+                          "example": 12345678
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Contract paused"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non autorisé (seul le owner peut pauser)"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/users/unpause": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Reprendre le contrat",
+        "description": "Réactive le contrat après une pause d'urgence.\nToutes les opérations redeviennent possibles.\n**Nécessite les droits Owner.**\n",
+        "operationId": "unpauseContract",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contrat repris avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactionHash": {
+                          "type": "string",
+                          "example": "0xabc123..."
+                        },
+                        "blockNumber": {
+                          "type": "number",
+                          "example": 12345679
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Contract unpaused"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non autorisé (seul le owner peut reprendre)"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/wallets": {
+      "post": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Créer un nouveau wallet -> C'EST OK",
+        "description": "Crée un nouveau wallet blockchain pour l'utilisateur spécifié.\n\n**Fonctionnalités :**\n- Génère automatiquement une adresse Ethereum\n- Chiffre la clé privée de manière sécurisée\n- Le premier wallet créé devient le wallet par défaut\n- Initialise le solde à 0 pour la devise choisie\n",
+        "operationId": "createWallet",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "userId",
+                  "label"
+                ],
+                "properties": {
+                  "userId": {
+                    "type": "integer",
+                    "description": "ID de l'utilisateur",
+                    "example": 1
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Nom du wallet",
+                    "example": "Mon Wallet Principal"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "PERSONAL",
+                      "BUSINESS",
+                      "SAVINGS"
+                    ],
+                    "description": "Type de wallet",
+                    "default": "PERSONAL",
+                    "example": "PERSONAL"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "Devise initiale du wallet",
+                    "default": "XAF",
+                    "example": "XAF"
+                  }
+                }
+              },
+              "examples": {
+                "personal": {
+                  "summary": "Wallet personnel",
+                  "value": {
+                    "userId": 1,
+                    "label": "Mon Wallet Principal",
+                    "type": "PERSONAL",
+                    "currency": "XAF"
+                  }
+                },
+                "business": {
+                  "summary": "Wallet professionnel",
+                  "value": {
+                    "userId": 1,
+                    "label": "Entreprise SARL",
+                    "type": "BUSINESS",
+                    "currency": "EUR"
+                  }
+                },
+                "savings": {
+                  "summary": "Wallet épargne",
+                  "value": {
+                    "userId": 1,
+                    "label": "Mon Épargne",
+                    "type": "SAVINGS",
+                    "currency": "USDT"
+                  }
+                },
+                "minimal": {
+                  "summary": "Création minimale (valeurs par défaut)",
+                  "value": {
+                    "userId": 1,
+                    "label": "Mon Wallet"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wallet créé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "walletId": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "address": {
+                          "type": "string",
+                          "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+                        },
+                        "label": {
+                          "type": "string",
+                          "example": "Mon Wallet Principal"
+                        },
+                        "type": {
+                          "type": "string",
+                          "example": "PERSONAL"
+                        },
+                        "isDefault": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "ACTIVE"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Wallet created successfully"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "examples": {
+                  "missingFields": {
+                    "summary": "Champs manquants",
+                    "value": {
+                      "error": "Missing required fields: userId, label"
+                    }
+                  },
+                  "userNotFound": {
+                    "summary": "Utilisateur non trouvé",
+                    "value": {
+                      "error": "user does not exist"
+                    }
+                  },
+                  "invalidType": {
+                    "summary": "Type invalide",
+                    "value": {
+                      "error": "Invalid wallet type"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Authentication required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Récupérer tous les wallets de l'utilisateur  -> C'EST OK",
+        "description": "Retourne la liste complète des wallets appartenant à l'utilisateur authentifié.\n\n**Informations retournées :**\n- Détails de chaque wallet\n- Soldes pour toutes les devises\n- Wallet par défaut identifié\n- Triés par : wallet par défaut en premier, puis par date de création\n",
+        "operationId": "getUserWallets",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des wallets récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "integer",
+                          "description": "Nombre total de wallets",
+                          "example": 3
+                        },
+                        "wallets": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Wallet"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "multipleWallets": {
+                    "summary": "Utilisateur avec plusieurs wallets",
+                    "value": {
+                      "success": true,
+                      "data": {
+                        "total": 3,
+                        "wallets": [
+                          {
+                            "id": 1,
+                            "address": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+                            "label": "Mon Wallet Principal",
+                            "type": "PERSONAL",
+                            "status": "ACTIVE",
+                            "isDefault": true,
+                            "balances": [
+                              {
+                                "currency": "XAF",
+                                "balance": "125000.50",
+                                "currencyName": "CFA Franc",
+                                "currencySymbol": "FCFA"
+                              },
+                              {
+                                "currency": "EUR",
+                                "balance": "500.00",
+                                "currencyName": "Euro",
+                                "currencySymbol": "€"
+                              }
+                            ],
+                            "createdAt": "2025-01-10T10:00:00Z"
+                          },
+                          {
+                            "id": 2,
+                            "address": "0x8F3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+                            "label": "Mon Épargne",
+                            "type": "SAVINGS",
+                            "status": "ACTIVE",
+                            "isDefault": false,
+                            "balances": [
+                              {
+                                "currency": "USDT",
+                                "balance": "1000.00",
+                                "currencyName": "Tether USD",
+                                "currencySymbol": "$"
+                              }
+                            ],
+                            "createdAt": "2025-01-12T15:30:00Z"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/api/wallets/{walletId}": {
+      "get": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Récupérer les détails d'un wallet spécifique  -> C'EST OK",
+        "description": "Retourne les informations détaillées d'un wallet.\nL'utilisateur ne peut accéder qu'à ses propres wallets.\n",
+        "operationId": "getWalletById",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "required": true,
+            "description": "ID du wallet",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Détails du wallet récupérés avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Wallet"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ID de wallet invalide"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "404": {
+            "description": "Wallet non trouvé ou accès refusé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Wallet not found or access denied"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/api/wallets/users/{address}/balance/{currency}": {
+      "get": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Obtenir le solde d'une devise spécifique sur la blockchain",
+        "description": "Récupère le solde actuel d'une devise donnée pour une adresse utilisateur via le contrat intelligent.\n",
+        "operationId": "getUserBalance",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "Adresse Ethereum de l'utilisateur",
+            "schema": {
+              "type": "string",
+              "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "path",
+            "required": true,
+            "description": "Code de la devise (ex: XAF, EUR, USD)",
+            "schema": {
+              "type": "string",
+              "example": "EUR"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Solde récupéré avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/WalletBalance"
+                    }
+                  },
+                  "$ref": "#/components/schemas/WalletBalance"
+                },
+                "examples": {
+                  "xafBalance": {
+                    "summary": "Solde en XAF",
+                    "value": {
+                      "success": true,
+                      "data": {
+                        "walletId": 1,
+                        "currency": "XAF",
+                        "balance": "125000.50",
+                        "currencyName": "CFA Franc",
+                        "currencySymbol": "FCFA",
+                        "lastUpdated": "2025-01-15T14:25:00Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Paramètres invalides"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "404": {
+            "description": "Wallet ou devise non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "examples": {
+                  "walletNotFound": {
+                    "summary": "Wallet non trouvé",
+                    "value": {
+                      "error": "Wallet not found or access denied"
+                    }
+                  },
+                  "currencyNotFound": {
+                    "summary": "Devise non trouvée",
+                    "value": {
+                      "error": "No balance found for currency EUR"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur côté blockchain"
+          }
+        }
+      }
+    },
+    "/api/wallets/{walletId}/balance": {
+      "put": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Mettre à jour le solde d'un wallet",
+        "description": "Ajoute ou retire un montant du solde d'un wallet.\n\n**Utilisations :**\n- Dépôts (MTN MOMO, carte bancaire)\n- Retraits\n- Ajustements manuels (admin)\n\n**⚠️ Note :** Cette route devrait être protégée avec des droits spéciaux en production.\n",
+        "operationId": "updateBalance",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "required": true,
+            "description": "ID du wallet",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBalanceRequest"
+              },
+              "examples": {
+                "deposit": {
+                  "summary": "Dépôt de 50000 XAF",
+                  "value": {
+                    "currency": "XAF",
+                    "amount": "50000",
+                    "operation": "add"
+                  }
+                },
+                "withdrawal": {
+                  "summary": "Retrait de 25000 XAF",
+                  "value": {
+                    "currency": "XAF",
+                    "amount": "25000",
+                    "operation": "subtract"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Solde mis à jour avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "walletId": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "currency": {
+                          "type": "string",
+                          "example": "XAF"
+                        },
+                        "balance": {
+                          "type": "string",
+                          "example": "175000.50"
+                        },
+                        "operation": {
+                          "type": "string",
+                          "example": "add"
+                        },
+                        "amount": {
+                          "type": "string",
+                          "example": "50000"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Balance updated successfully"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "examples": {
+                  "missingFields": {
+                    "summary": "Champs manquants",
+                    "value": {
+                      "error": "Missing required fields: currency, amount, operation"
+                    }
+                  },
+                  "invalidOperation": {
+                    "summary": "Opération invalide",
+                    "value": {
+                      "error": "Invalid operation. Must be 'add' or 'subtract'"
+                    }
+                  },
+                  "invalidAmount": {
+                    "summary": "Montant invalide",
+                    "value": {
+                      "error": "Invalid amount"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "404": {
+            "description": "Wallet non trouvé"
+          },
+          "500": {
+            "description": "Erreur serveur (ex: solde insuffisant)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Insufficient balance"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wallets/{walletId}/set-default": {
+      "put": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Définir un wallet comme wallet par défaut   -> C'EST OK",
+        "description": "Marque un wallet comme wallet par défaut de l'utilisateur.\nLe wallet par défaut est utilisé pour les opérations rapides.\n\n**Comportement :**\n- Retire le flag \"isDefault\" des autres wallets\n- Définit le wallet sélectionné comme default\n",
+        "operationId": "setDefaultWallet",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "required": true,
+            "description": "ID du wallet à définir comme défaut",
+            "schema": {
+              "type": "integer",
+              "example": 2
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet par défaut mis à jour",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "walletId": {
+                          "type": "integer",
+                          "example": 2
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Default wallet updated successfully"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ID invalide"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "404": {
+            "description": "Wallet non trouvé"
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/api/wallets/{walletId}/label": {
+      "put": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Mettre à jour le nom d'un wallet   -> C'EST OK",
+        "description": "Permet de renommer un wallet pour une meilleure organisation.\n\n**Exemples de noms :**\n- \"Mon Wallet Principal\"\n- \"Épargne Vacances\"\n- \"Wallet Professionnel\"\n- \"Budget Courses\"\n",
+        "operationId": "updateWalletLabel",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "required": true,
+            "description": "ID du wallet",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLabelRequest"
+              },
+              "examples": {
+                "standard": {
+                  "summary": "Renommer en \"Mon Épargne\"",
+                  "value": {
+                    "label": "Mon Épargne"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Label mis à jour avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "walletId": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "label": {
+                          "type": "string",
+                          "example": "Mon Épargne"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Wallet label updated successfully"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Label manquant ou invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Label is required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "404": {
+            "description": "Wallet non trouvé"
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/api/wallets/{walletId}/export-key": {
+      "post": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Exporter la clé privée d'un wallet   -> C'EST OK",
+        "description": "**⚠️ OPÉRATION TRÈS SENSIBLE ⚠️**\n\nPermet d'exporter la clé privée d'un wallet.\n\n**Sécurité :**\n- Nécessite une confirmation par mot de passe\n- L'opération est loguée\n- Ne JAMAIS partager la clé privée\n\n**Cas d'usage :**\n- Import dans MetaMask\n- Sauvegarde personnelle\n- Migration vers une autre plateforme\n\n**⚠️ ATTENTION :**\n- Quiconque possède la clé privée contrôle le wallet\n- Stockez la clé de manière ultra-sécurisée\n- Ne l'envoyez jamais par email ou message\n",
+        "operationId": "exportPrivateKey",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "required": true,
+            "description": "ID du wallet",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportKeyRequest"
+              },
+              "examples": {
+                "standard": {
+                  "summary": "Exporter avec confirmation",
+                  "value": {
+                    "password": "SecurePass123!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Clé privée exportée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "walletId": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "address": {
+                          "type": "string",
+                          "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+                        },
+                        "privateKey": {
+                          "type": "string",
+                          "example": "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+                        },
+                        "warning": {
+                          "type": "string",
+                          "example": "Never share your private key with anyone. Store it securely."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Mot de passe manquant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Password confirmation required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié ou mot de passe incorrect"
+          },
+          "404": {
+            "description": "Wallet non trouvé"
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/api/wallets/{address}/currencies": {
+      "get": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Récupérer les devises et soldes blockchain d'un utilisateur -> C'EST OK",
+        "description": "Interroge le contrat intelligent pour lister toutes les devises et soldes du wallet utilisateur.\n\n**Informations :**\n- Les montants proviennent directement du smart contract `MultiWalletExchange`\n- Les soldes sont exprimés en unités standardisées (18 décimales)\n",
+        "operationId": "getUserCurrencies",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "Adresse Ethereum du wallet",
+            "schema": {
+              "type": "string",
+              "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des devises et soldes récupérés avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WalletBalance"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Adresse invalide"
+          },
+          "404": {
+            "description": "Wallet introuvable"
+          },
+          "500": {
+            "description": "Erreur côté blockchain"
+          }
+        }
+      }
+    },
+    "/api/wallets/deposit": {
+      "post": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Effectuer un dépôt dans un wallet blockchain   -> C'EST OK",
+        "description": "Enregistre un dépôt sur la blockchain pour un utilisateur donné.\n- Met à jour le solde sur le contrat `MultiWalletExchange`\n- Émet un évènement `Deposit` sur la blockchain\n",
+        "operationId": "deposit",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "address",
+                  "currency",
+                  "amount"
+                ],
+                "properties": {
+                  "walletId": {
+                    "type": "string",
+                    "description": "Adresse Ethereum de l'utilisateur",
+                    "example": 1
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "Code de la devise",
+                    "example": "EUR"
+                  },
+                  "amount": {
+                    "type": "string",
+                    "description": "Montant à déposer (en wei)",
+                    "example": "1000000000000000000"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dépôt effectué avec succès"
+          },
+          "400": {
+            "description": "Données invalides"
+          },
+          "500": {
+            "description": "Erreur côté blockchain"
+          }
+        }
+      }
+    },
+    "/api/wallets/convert": {
+      "post": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Convertir une devise en une autre via le contrat d'échange   -> C'EST OK",
+        "description": "Effectue une conversion blockchain entre deux devises selon le taux défini dans `MultiWalletExchange`.\n",
+        "operationId": "convert",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "walletId",
+                  "fromCurrency",
+                  "toCurrency",
+                  "amount"
+                ],
+                "properties": {
+                  "walletId": {
+                    "type": "Number",
+                    "description": "ID du wallet utilisateur",
+                    "example": 1
+                  },
+                  "fromCurrency": {
+                    "type": "string",
+                    "example": "XAF"
+                  },
+                  "toCurrency": {
+                    "type": "string",
+                    "example": "EUR"
+                  },
+                  "amount": {
+                    "type": "string",
+                    "example": "1000000000000000000"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conversion effectuée avec succès"
+          },
+          "400": {
+            "description": "Paramètres invalides ou taux manquant"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/wallets/transfer": {
+      "post": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Transférer des fonds entre deux utilisateurs -> C'EST OK",
+        "description": "Effectue un transfert blockchain d'une devise entre deux adresses utilisateurs.\n- Déduit les frais de transfert (par défaut 0.5%)\n- Met à jour les soldes sur la blockchain\n- Émet un évènement `Transfer`\n",
+        "operationId": "transfer",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "walletId",
+                  "toAddress",
+                  "currency",
+                  "amount"
+                ],
+                "properties": {
+                  "walletId": {
+                    "type": "number",
+                    "description": "Adresse de l’expéditeur",
+                    "example": 1
+                  },
+                  "toAddress": {
+                    "type": "string",
+                    "description": "Adresse du destinataire",
+                    "example": "0x2222..."
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "Code de la devise transférée",
+                    "example": "XAF"
+                  },
+                  "amount": {
+                    "type": "string",
+                    "description": "Montant transféré (en wei)",
+                    "example": "5000000000000000000"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transfert effectué avec succès"
+          },
+          "400": {
+            "description": "Paramètres invalides"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/wallets/rate/{currency}": {
+      "get": {
+        "tags": [
+          "Admin Wallets"
+        ],
+        "summary": "Récupérer le taux de change d'une devise",
+        "description": "Retourne le taux de change configuré sur le contrat `MultiWalletExchange`.\n",
+        "operationId": "getExchangeRate",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "EUR"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Taux récupéré"
+          },
+          "404": {
+            "description": "Devise inconnue"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/wallets/rate": {
+      "post": {
+        "tags": [
+          "Admin Wallets"
+        ],
+        "summary": "Définir un taux de change -> C'EST OK",
+        "description": "Configure le taux de change d'une devise dans le contrat `MultiWalletExchange`.\n**⚠️ Réservé aux administrateurs (owner du contrat)**.\n",
+        "operationId": "setExchangeRate",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "currency",
+                  "rate"
+                ],
+                "properties": {
+                  "currency": {
+                    "type": "string",
+                    "example": "EUR"
+                  },
+                  "rate": {
+                    "type": "string",
+                    "example": "1200"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Taux mis à jour"
+          },
+          "401": {
+            "description": "Non autorisé"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/wallets/spread/{currency}": {
+      "get": {
+        "tags": [
+          "Admin Wallets"
+        ],
+        "summary": "Récupérer le spread appliqué à une devise",
+        "description": "Retourne le spread (marge) appliqué pour les conversions d'une devise donnée.\n",
+        "operationId": "getSpread",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "EUR"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Spread récupéré"
+          },
+          "404": {
+            "description": "Devise inconnue"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    },
+    "/api/wallets/spread": {
+      "post": {
+        "tags": [
+          "Admin Wallets"
+        ],
+        "summary": "Définir un spread pour une devise -> C'EST OK",
+        "description": "Met à jour le spread (marge en basis points) d'une devise sur le contrat `MultiWalletExchange`.\n",
+        "operationId": "setSpread",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "currency",
+                  "bps"
+                ],
+                "properties": {
+                  "currency": {
+                    "type": "string",
+                    "example": "EUR"
+                  },
+                  "bps": {
+                    "type": "integer",
+                    "description": "Spread en basis points (100 = 1%)",
+                    "example": 50
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Spread mis à jour"
+          },
+          "401": {
+            "description": "Non autorisé"
+          },
+          "500": {
+            "description": "Erreur blockchain"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Wallet": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID unique du wallet",
+            "example": 1
+          },
+          "address": {
+            "type": "string",
+            "description": "Adresse Ethereum du wallet",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+          },
+          "label": {
+            "type": "string",
+            "description": "Nom personnalisé du wallet",
+            "example": "Mon Wallet Principal"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PERSONAL",
+              "BUSINESS",
+              "SAVINGS"
+            ],
+            "description": "Type de wallet",
+            "example": "PERSONAL"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "FROZEN",
+              "CLOSED"
+            ],
+            "description": "Statut du wallet",
+            "example": "ACTIVE"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Wallet par défaut de l'utilisateur",
+            "example": true
+          },
+          "balances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WalletBalance"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-15T10:30:00Z"
+          }
+        }
+      },
+      "WalletBalance": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "description": "Code de la devise",
+            "example": "XAF"
+          },
+          "balance": {
+            "type": "string",
+            "description": "Solde disponible",
+            "example": "125000.50"
+          },
+          "currencyName": {
+            "type": "string",
+            "description": "Nom complet de la devise",
+            "example": "CFA Franc"
+          },
+          "currencySymbol": {
+            "type": "string",
+            "description": "Symbole de la devise",
+            "example": "FCFA"
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-15T14:25:00Z"
+          }
+        }
+      },
+      "CreateWalletRequest": {
+        "type": "object",
+        "required": [
+          "label"
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Nom du wallet",
+            "example": "Mon Wallet Principal"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PERSONAL",
+              "BUSINESS",
+              "SAVINGS"
+            ],
+            "description": "Type de wallet",
+            "default": "PERSONAL",
+            "example": "PERSONAL"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Devise initiale du wallet",
+            "default": "XAF",
+            "example": "XAF"
+          }
+        }
+      },
+      "UpdateBalanceRequest": {
+        "type": "object",
+        "required": [
+          "currency",
+          "amount",
+          "operation"
+        ],
+        "properties": {
+          "currency": {
+            "type": "string",
+            "description": "Code de la devise",
+            "example": "XAF"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Montant à ajouter ou retirer",
+            "example": "50000"
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "add",
+              "subtract"
+            ],
+            "description": "Type d'opération",
+            "example": "add"
+          }
+        }
+      },
+      "UpdateLabelRequest": {
+        "type": "object",
+        "required": [
+          "label"
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Nouveau nom du wallet",
+            "example": "Mon Épargne"
+          }
+        }
+      },
+      "ExportKeyRequest": {
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "properties": {
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "Mot de passe pour confirmer l'export",
+            "example": "SecurePass123!"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtenu lors du login"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Users",
+      "description": "Gestion des utilisateurs"
+    },
+    {
+      "name": "Wallets",
+      "description": "Gestion des wallets sur la blockchain"
+    }
+  ]
+}

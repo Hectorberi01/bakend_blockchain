@@ -1,0 +1,80 @@
+export enum KYCStatus {
+  NONE = 'NONE',
+  PENDING = 'PENDING',
+  VERIFIED = 'VERIFIED',
+  REJECTED = 'REJECTED',
+  SUSPENDED = 'SUSPENDED'
+}
+
+export enum UserLevel {
+  BASIC = 'BASIC',
+  VERIFIED = 'VERIFIED',
+  PREMIUM = 'PREMIUM',
+  BUSINESS = 'BUSINESS'
+}
+
+export enum DocumentType {
+  PASSPORT = 'PASSPORT',
+  ID_CARD = 'ID_CARD',
+  DRIVERS_LICENSE = 'DRIVERS_LICENSE',
+  RESIDENCE_PERMIT = 'RESIDENCE_PERMIT'
+}
+
+export enum WalletType {
+  PERSONAL = 'PERSONAL',
+  FAMILY = 'FAMILY',
+  BUSINESS = 'BUSINESS',
+  SAVINGS = 'SAVINGS',
+  CUSTOM = 'CUSTOM'
+}
+
+export enum WalletStatus {
+  ACTIVE = 'ACTIVE',
+  FROZEN = 'FROZEN',
+  CLOSED = 'CLOSED'
+}
+
+export enum TransactionType {
+  TRANSFER = 'TRANSFER',
+  DEPOSIT = 'DEPOSIT',
+  WITHDRAWAL = 'WITHDRAWAL',
+  EXCHANGE = 'EXCHANGE',
+  PAYMENT = 'PAYMENT'
+}
+
+export enum PaymentMethod {
+  WALLET = 'WALLET',
+  BANK_TRANSFER = 'BANK_TRANSFER',
+  MOBILE_MONEY = 'MOBILE_MONEY',
+  CARD = 'CARD',
+  CRYPTO = 'CRYPTO'
+}
+
+export enum TransactionStatus {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED'
+}
+
+export enum QuoteDirection {
+  BUY = 'BUY',
+  SELL = 'SELL'
+}
+
+export enum QuoteStatus {
+  ACTIVE = 'ACTIVE',
+  USED = 'USED',
+  EXPIRED = 'EXPIRED',
+  CANCELLED = 'CANCELLED'
+}
+
+export enum NotificationType {
+  TRANSACTION = 'TRANSACTION',
+  KYC_UPDATE = 'KYC_UPDATE',
+  SECURITY_ALERT = 'SECURITY_ALERT',
+  PROMOTIONAL = 'PROMOTIONAL',
+  SYSTEM = 'SYSTEM'
+}
