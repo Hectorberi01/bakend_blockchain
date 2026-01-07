@@ -27,6 +27,9 @@ const options = {
         path_1.default.resolve(__dirname, "../../routes/*.ts"),
         path_1.default.resolve(__dirname, "../routes/**/*.ts"),
         path_1.default.resolve(__dirname, "./components/*.ts"),
+        path_1.default.resolve(__dirname, "../../routes/*.js"),
+        path_1.default.resolve(__dirname, "../routes/**/*.js"),
+        path_1.default.resolve(__dirname, "./components/*.js"),
     ],
 };
 exports.swaggerSpec = (0, swagger_jsdoc_1.default)(options);

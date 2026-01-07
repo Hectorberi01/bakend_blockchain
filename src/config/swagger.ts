@@ -23,6 +23,9 @@ const options: swaggerJSDoc.Options = {
     path.resolve(__dirname, "../../routes/*.ts"),
     path.resolve(__dirname, "../routes/**/*.ts"),
     path.resolve(__dirname, "./components/*.ts"),
+    path.resolve(__dirname, "../../routes/*.js"),
+    path.resolve(__dirname, "../routes/**/*.js"),
+    path.resolve(__dirname, "./components/*.js"),
   ],
 };
 
